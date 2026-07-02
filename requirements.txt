@@ -19,7 +19,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   uvicorn
-fastapi==0.138.1
+fastapi==0.139.0
     # via schwinn-dashboard
 h11==0.16.0
     # via
@@ -43,7 +43,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   werkzeug
-narwhals==2.22.1
+narwhals==2.23.0
     # via plotly
 numpy==2.5.0
     # via pandas
@@ -51,7 +51,7 @@ packaging==26.2
     # via plotly
 pandas==3.0.3
     # via schwinn-dashboard
-pillow==12.2.0
+pillow==12.3.0
     # via schwinn-dashboard
 plotly==6.8.0
     # via schwinn-dashboard
