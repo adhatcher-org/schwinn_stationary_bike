@@ -22,7 +22,7 @@ jobs:
     concurrency:
       group: docker-publish
       cancel-in-progress: false
-    uses: adhatcher-org/shared-workflows/.github/workflows/docker-publish.yml@8189d4131e5b4b78d9b6f947e4a3bc8a28d4fdc8 # v1.0.1
+    uses: adhatcher-org/shared-workflows/.github/workflows/docker-publish.yml@3a2500dcc66234689846530ba8e616eda00a2633 # v1.0.2
     with:
       package-name: schwinn_stationary_bike
       checkout-ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
