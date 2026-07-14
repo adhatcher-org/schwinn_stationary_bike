@@ -43,7 +43,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   werkzeug
-narwhals==2.23.0
+narwhals==2.24.0
     # via plotly
 numpy==2.5.1
     # via pandas
