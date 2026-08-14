@@ -15,3 +15,7 @@ updates:
     schedule:
       interval: "weekly"
     target-branch: "master"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
