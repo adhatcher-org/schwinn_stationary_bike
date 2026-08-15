@@ -22,9 +22,17 @@ async def auth_and_metrics_middleware(request: Request, call_next):
     init_auth_db()
     path = request.url.path
 
-    if not admin_exists() and path not in config.BOOTSTRAP_ALLOWED_PATHS and not path.startswith("/static"):
+    if (
+        not admin_exists()
+        and path not in config.BOOTSTRAP_ALLOWED_PATHS
+        and not path.startswith("/static")
+    ):
         response = redirect_to(route_url(request, "setup_admin"))
-    elif path.startswith("/static") or path in config.PUBLIC_PATHS or path.startswith("/reset-password/"):
+    elif (
+        path.startswith("/static")
+        or path in config.PUBLIC_PATHS
+        or path.startswith("/reset-password/")
+    ):
         response = await call_next(request)
     elif current_user(request) is not None:
         response = await call_next(request)
@@ -39,5 +47,7 @@ async def auth_and_metrics_middleware(request: Request, call_next):
     endpoint = request.scope.get("endpoint")
     endpoint_name = getattr(endpoint, "__name__", path)
     REQUEST_COUNT.labels(request.method, endpoint_name, str(response.status_code)).inc()
-    REQUEST_LATENCY.labels(request.method, endpoint_name).observe(perf_counter() - request.state.request_start)
+    REQUEST_LATENCY.labels(request.method, endpoint_name).observe(
+        perf_counter() - request.state.request_start
+    )
     return response

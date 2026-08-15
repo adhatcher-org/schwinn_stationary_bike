@@ -36,7 +36,9 @@ def create_app() -> FastAPI:
     configure_logging()
 
     if config.STATIC_DIR.exists():
-        fastapi_app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")
+        fastapi_app.mount(
+            "/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static"
+        )
 
     fastapi_app.middleware("http")(auth_and_metrics_middleware)
     fastapi_app.add_middleware(

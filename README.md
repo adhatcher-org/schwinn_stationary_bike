@@ -30,7 +30,7 @@ The parsed workout columns are:
 
 ```bash
 make install
-make test
+make check
 make run
 ```
 
@@ -38,9 +38,10 @@ Then open `http://localhost:8080`.
 
 ## Security checks
 
-This project now includes a local security workflow:
+This project now includes a non-mutating local validation workflow:
 
-- `make security` runs `pip-audit`, `bandit`, and a local CodeQL analysis.
+- `make check` validates formatting, linting, tests, coverage, security, and Python/Node lockfiles without rewriting tracked files. Run `make install` first to create the Python environment.
+- `make security` runs `pip-audit` and `bandit`.
 - `make local-test` runs `make test`, `make coverage`, `make security`, and `make docker-ui-test`.
 
 ## Git hooks

@@ -57,7 +57,9 @@ def build_reset_link(request: Request | str, token: str | None = None) -> str:
         token = str(request)
         if config.PUBLIC_BASE_URL:
             return f"{config.PUBLIC_BASE_URL}/reset-password/{token}"
-        raise PasswordResetTokenError("Request is required when PUBLIC_BASE_URL is not configured.")
+        raise PasswordResetTokenError(
+            "Request is required when PUBLIC_BASE_URL is not configured."
+        )
     reset_path = request.url_for("reset_password", token=token).path
     if config.PUBLIC_BASE_URL:
         return f"{config.PUBLIC_BASE_URL}{reset_path}"

@@ -53,9 +53,8 @@ def load_workout_data(workout_json: Iterable[dict]) -> pd.DataFrame:
             f"{workout_dict['workoutDate']['Day']}/"
             f"{workout_dict['workoutDate']['Year']}"
         )
-        total_minutes = (
-            int(workout_dict["totalWorkoutTime"]["Hours"]) * 60
-            + int(workout_dict["totalWorkoutTime"]["Minutes"])
+        total_minutes = int(workout_dict["totalWorkoutTime"]["Hours"]) * 60 + int(
+            workout_dict["totalWorkoutTime"]["Minutes"]
         )
         rows.append(
             [
@@ -84,14 +83,20 @@ def load_history_file(history_file: Path) -> pd.DataFrame:
     if history_df.empty:
         return pd.DataFrame(columns=config.COLUMN_NAMES)
 
-    history_df["Workout_Date"] = pd.to_datetime(history_df["Workout_Date"], errors="coerce")
+    history_df["Workout_Date"] = pd.to_datetime(
+        history_df["Workout_Date"], errors="coerce"
+    )
     history_df = history_df.dropna(subset=["Workout_Date"])
 
     for field in config.GRAPHABLE_FIELDS:
         if field in history_df.columns:
             history_df[field] = pd.to_numeric(history_df[field], errors="coerce")
 
-    return history_df[config.COLUMN_NAMES].sort_values(by=["Workout_Date"]).reset_index(drop=True)
+    return (
+        history_df[config.COLUMN_NAMES]
+        .sort_values(by=["Workout_Date"])
+        .reset_index(drop=True)
+    )
 
 
 def merge_data(new_data: pd.DataFrame, historical_data: pd.DataFrame) -> pd.DataFrame:
@@ -103,7 +108,9 @@ def merge_data(new_data: pd.DataFrame, historical_data: pd.DataFrame) -> pd.Data
 
     combined_file = pd.concat([historical_data, new_data], ignore_index=True)
     sorted_file = combined_file.sort_values(by=["Workout_Date"]).reset_index(drop=True)
-    merged = sorted_file.drop_duplicates(subset=["Workout_Date", "Workout_Time"], keep="last")
+    merged = sorted_file.drop_duplicates(
+        subset=["Workout_Date", "Workout_Time"], keep="last"
+    )
     return merged.reset_index(drop=True)
 
 
@@ -129,12 +136,18 @@ async def read_dat_from_upload(upload_file: UploadFile) -> pd.DataFrame:
 async def read_history_csv_from_upload(upload_file: UploadFile) -> pd.DataFrame:
     """Read and validate an uploaded history CSV."""
     upload_df = pd.read_csv(BytesIO(await upload_file.read()))
-    missing_columns = [col for col in config.COLUMN_NAMES if col not in upload_df.columns]
+    missing_columns = [
+        col for col in config.COLUMN_NAMES if col not in upload_df.columns
+    ]
     if missing_columns:
-        raise ValueError(f"Missing required columns in historical CSV: {', '.join(missing_columns)}")
+        raise ValueError(
+            f"Missing required columns in historical CSV: {', '.join(missing_columns)}"
+        )
 
     history_df = upload_df[config.COLUMN_NAMES].copy()
-    history_df["Workout_Date"] = pd.to_datetime(history_df["Workout_Date"], errors="coerce")
+    history_df["Workout_Date"] = pd.to_datetime(
+        history_df["Workout_Date"], errors="coerce"
+    )
     history_df = history_df.dropna(subset=["Workout_Date"])
 
     for field in config.GRAPHABLE_FIELDS:

@@ -97,7 +97,9 @@ def _extract_alert_fields(alert: dict[str, Any]) -> dict[str, Any]:
     advisory = alert.get("security_advisory", {}) or {}
 
     package_name = dep_package.get("name") or vuln_package.get("name") or ""
-    ecosystem = (dep_package.get("ecosystem") or vuln_package.get("ecosystem") or "").lower()
+    ecosystem = (
+        dep_package.get("ecosystem") or vuln_package.get("ecosystem") or ""
+    ).lower()
 
     return {
         "alert_id": alert.get("number") or alert.get("id"),
@@ -128,7 +130,9 @@ def _passes_filters(fields: dict[str, Any], min_severity: str) -> bool:
     return severity_rank >= threshold_rank
 
 
-def _api_get_json(repo: str, token: str, path: str, params: dict[str, Any] | None = None) -> Any:
+def _api_get_json(
+    repo: str, token: str, path: str, params: dict[str, Any] | None = None
+) -> Any:
     """Fetch JSON from the GitHub API."""
     payload, _ = _api_get_json_with_headers(repo, token, path, params=params)
     return payload
@@ -155,8 +159,12 @@ def _api_get_json_with_headers(
     request.add_header("X-GitHub-Api-Version", "2022-11-28")
 
     try:
-        with urllib.request.urlopen(request, timeout=DEFAULT_TIMEOUT_SECONDS) as response:
-            return json.loads(response.read().decode("utf-8")), dict(response.headers.items())
+        with urllib.request.urlopen(
+            request, timeout=DEFAULT_TIMEOUT_SECONDS
+        ) as response:
+            return json.loads(response.read().decode("utf-8")), dict(
+                response.headers.items()
+            )
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         hint = ""
@@ -166,7 +174,9 @@ def _api_get_json_with_headers(
                 "Use a token with Dependabot alerts read permission "
                 "(for example, set DEPENDABOT_ALERTS_TOKEN secret)."
             )
-        raise RuntimeError(f"GitHub API request failed ({exc.code}): {detail}{hint}") from exc
+        raise RuntimeError(
+            f"GitHub API request failed ({exc.code}): {detail}{hint}"
+        ) from exc
     except urllib.error.URLError as exc:
         raise RuntimeError(f"GitHub API request failed: {exc.reason}") from exc
 
@@ -224,7 +234,12 @@ def _build_fallback_constraint(first_patched_version: str) -> str | None:
     return f">={major}.{minor}.{patch},<{major + 1}.0.0"
 
 
-def _format_pr_body(fields: dict[str, Any], result: dict[str, Any], old_version: str | None, new_version: str | None) -> str:
+def _format_pr_body(
+    fields: dict[str, Any],
+    result: dict[str, Any],
+    old_version: str | None,
+    new_version: str | None,
+) -> str:
     """Render the pull request body for an automated remediation."""
     lines = [
         "## Automated Security Remediation",
@@ -253,7 +268,9 @@ def _format_pr_body(fields: dict[str, Any], result: dict[str, Any], old_version:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     """Write an indented JSON payload to disk."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def _list_alerts(args: argparse.Namespace) -> int:
@@ -295,19 +312,30 @@ def _remediate_alert(args: argparse.Namespace) -> int:
     """Attempt to remediate one Dependabot alert."""
     alert = _find_alert(args.repo, args.token, args.alert_id)
     if not alert:
-        payload = {"status": "skipped", "reason": f"Alert {args.alert_id} is not open or not found."}
+        payload = {
+            "status": "skipped",
+            "reason": f"Alert {args.alert_id} is not open or not found.",
+        }
         _write_json(Path(args.output), payload)
         return 0
 
     fields = _extract_alert_fields(alert)
     if not _passes_filters(fields, args.severity_threshold):
-        payload = {"status": "skipped", "reason": f"Alert {args.alert_id} does not match filters.", "alert": fields}
+        payload = {
+            "status": "skipped",
+            "reason": f"Alert {args.alert_id} does not match filters.",
+            "alert": fields,
+        }
         _write_json(Path(args.output), payload)
         return 0
 
     package_name = fields["package"]
     if not package_name:
-        payload = {"status": "skipped", "reason": "Alert has no package name.", "alert": fields}
+        payload = {
+            "status": "skipped",
+            "reason": "Alert has no package name.",
+            "alert": fields,
+        }
         _write_json(Path(args.output), payload)
         return 0
 
@@ -338,7 +366,9 @@ def _remediate_alert(args: argparse.Namespace) -> int:
     old_version = before_versions.get(package_key)
 
     update_command = ["uv", "lock", "--upgrade-package", package_name]
-    base_result["commands"].append(" ".join(shlex.quote(part) for part in update_command))
+    base_result["commands"].append(
+        " ".join(shlex.quote(part) for part in update_command)
+    )
     update_run = _run(update_command)
     remediation_attempts = [update_run]
 
@@ -346,25 +376,36 @@ def _remediate_alert(args: argparse.Namespace) -> int:
         constraint = _build_fallback_constraint(fields["first_patched_version"])
         if constraint:
             add_command = ["uv", "add", f"{package_name}{constraint}"]
-            base_result["commands"].append(" ".join(shlex.quote(part) for part in add_command))
+            base_result["commands"].append(
+                " ".join(shlex.quote(part) for part in add_command)
+            )
             remediation_attempts.append(_run(add_command))
 
-    changed_files = _run(["git", "status", "--porcelain", "--", "pyproject.toml", "uv.lock"])
+    changed_files = _run(
+        ["git", "status", "--porcelain", "--", "pyproject.toml", "uv.lock"]
+    )
     if changed_files.returncode != 0:
         base_result["reason"] = "Failed to inspect git status after remediation."
         _write_json(Path(args.output), base_result)
         return 0
 
     if not changed_files.stdout.strip():
-        stderr_text = "\n".join([attempt.stderr.strip() for attempt in remediation_attempts if attempt.stderr.strip()])
+        stderr_text = "\n".join(
+            [
+                attempt.stderr.strip()
+                for attempt in remediation_attempts
+                if attempt.stderr.strip()
+            ]
+        )
         if not fields["first_patched_version"]:
             base_result["status"] = "skipped"
-            base_result["reason"] = "No resolvable first patched version in alert metadata."
+            base_result["reason"] = (
+                "No resolvable first patched version in alert metadata."
+            )
         else:
             base_result["status"] = "skipped"
-            base_result["reason"] = (
-                "Remediation produced no dependency changes."
-                + (f" Last error: {stderr_text}" if stderr_text else "")
+            base_result["reason"] = "Remediation produced no dependency changes." + (
+                f" Last error: {stderr_text}" if stderr_text else ""
             )
         _write_json(Path(args.output), base_result)
         return 0
@@ -395,15 +436,21 @@ def _remediate_alert(args: argparse.Namespace) -> int:
     base_result["status"] = "remediated"
     base_result["old_version"] = old_version
     base_result["new_version"] = new_version
-    base_result["pr_body"] = _format_pr_body(fields, base_result, old_version, new_version)
+    base_result["pr_body"] = _format_pr_body(
+        fields, base_result, old_version, new_version
+    )
     _write_json(Path(args.output), base_result)
     return 0
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser."""
-    parser = argparse.ArgumentParser(description="Dependabot security remediation agent")
-    parser.add_argument("--repo", required=True, help="Repository in owner/name format.")
+    parser = argparse.ArgumentParser(
+        description="Dependabot security remediation agent"
+    )
+    parser.add_argument(
+        "--repo", required=True, help="Repository in owner/name format."
+    )
     parser.add_argument("--token", required=True, help="GitHub token for API access.")
     parser.add_argument(
         "--severity-threshold",
@@ -411,17 +458,33 @@ def _build_parser() -> argparse.ArgumentParser:
         default="high",
         help="Minimum alert severity to remediate.",
     )
-    parser.add_argument("--output", default="security-remediation-output.json", help="Path for output JSON.")
+    parser.add_argument(
+        "--output",
+        default="security-remediation-output.json",
+        help="Path for output JSON.",
+    )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    list_parser = subparsers.add_parser("list", help="List alerts that match remediation criteria.")
-    list_parser.add_argument("--max-alerts", type=int, default=10, help="Maximum alerts to return.")
+    list_parser = subparsers.add_parser(
+        "list", help="List alerts that match remediation criteria."
+    )
+    list_parser.add_argument(
+        "--max-alerts", type=int, default=10, help="Maximum alerts to return."
+    )
     list_parser.set_defaults(func=_list_alerts)
 
-    remediate_parser = subparsers.add_parser("remediate", help="Remediate a single alert.")
-    remediate_parser.add_argument("--alert-id", type=int, required=True, help="Dependabot alert id/number.")
-    remediate_parser.add_argument("--dry-run", action="store_true", help="Plan actions without changing dependencies.")
+    remediate_parser = subparsers.add_parser(
+        "remediate", help="Remediate a single alert."
+    )
+    remediate_parser.add_argument(
+        "--alert-id", type=int, required=True, help="Dependabot alert id/number."
+    )
+    remediate_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Plan actions without changing dependencies.",
+    )
     remediate_parser.set_defaults(func=_remediate_alert)
 
     return parser

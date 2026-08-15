@@ -24,7 +24,9 @@ def current_day() -> pd.Timestamp:
     return pd.Timestamp.now().normalize()
 
 
-def summarize_window(df: pd.DataFrame, *, days: int, today: pd.Timestamp | None = None) -> dict[str, float | int]:
+def summarize_window(
+    df: pd.DataFrame, *, days: int, today: pd.Timestamp | None = None
+) -> dict[str, float | int]:
     """Summarize workout totals for a rolling day window."""
     if today is None:
         today = current_day()
@@ -38,8 +40,12 @@ def summarize_window(df: pd.DataFrame, *, days: int, today: pd.Timestamp | None 
     window_df = df[(df["Workout_Date"] >= window_start) & (df["Workout_Date"] <= today)]
     return {
         "workout_count": int(len(window_df)),
-        "distance": float(pd.to_numeric(window_df["Distance"], errors="coerce").fillna(0).sum()),
-        "workout_time": int(pd.to_numeric(window_df["Workout_Time"], errors="coerce").fillna(0).sum()),
+        "distance": float(
+            pd.to_numeric(window_df["Distance"], errors="coerce").fillna(0).sum()
+        ),
+        "workout_time": int(
+            pd.to_numeric(window_df["Workout_Time"], errors="coerce").fillna(0).sum()
+        ),
     }
 
 
@@ -81,7 +87,9 @@ def build_summary_cards(df: pd.DataFrame) -> dict[str, dict[str, str]]:
     }
 
 
-def build_last_30_day_workouts(df: pd.DataFrame, *, today: pd.Timestamp | None = None) -> list[dict[str, str]]:
+def build_last_30_day_workouts(
+    df: pd.DataFrame, *, today: pd.Timestamp | None = None
+) -> list[dict[str, str]]:
     """Build display rows for workouts included in the last 30-day summary."""
     if df.empty:
         return []
@@ -99,10 +107,18 @@ def build_last_30_day_workouts(df: pd.DataFrame, *, today: pd.Timestamp | None =
         rows.append(
             {
                 "date": pd.to_datetime(workout["Workout_Date"]).date().isoformat(),
-                "time": format_minutes(int(pd.to_numeric(workout["Workout_Time"], errors="coerce"))),
-                "distance": format_distance(float(pd.to_numeric(workout["Distance"], errors="coerce"))),
-                "average_speed": format_distance(float(pd.to_numeric(workout["Avg_Speed"], errors="coerce"))),
-                "total_calories": format_distance(float(pd.to_numeric(workout["Total_Calories"], errors="coerce"))),
+                "time": format_minutes(
+                    int(pd.to_numeric(workout["Workout_Time"], errors="coerce"))
+                ),
+                "distance": format_distance(
+                    float(pd.to_numeric(workout["Distance"], errors="coerce"))
+                ),
+                "average_speed": format_distance(
+                    float(pd.to_numeric(workout["Avg_Speed"], errors="coerce"))
+                ),
+                "total_calories": format_distance(
+                    float(pd.to_numeric(workout["Total_Calories"], errors="coerce"))
+                ),
             }
         )
     return rows
@@ -164,7 +180,9 @@ def parse_field_selection(args) -> list[str]:
         if cleaned and cleaned not in deduped_fields:
             deduped_fields.append(cleaned)
 
-    invalid_fields = [field for field in deduped_fields if field not in config.GRAPHABLE_FIELDS]
+    invalid_fields = [
+        field for field in deduped_fields if field not in config.GRAPHABLE_FIELDS
+    ]
     if invalid_fields:
         raise ValueError(f"Unsupported field(s): {', '.join(invalid_fields)}")
 
@@ -173,7 +191,9 @@ def parse_field_selection(args) -> list[str]:
 
 def normalize_workout_detail_period(period: str | None) -> str:
     """Return a supported workout detail period."""
-    normalized = (period or "last_1_year").strip().lower().replace("-", "_").replace(" ", "_")
+    normalized = (
+        (period or "last_1_year").strip().lower().replace("-", "_").replace(" ", "_")
+    )
     aliases = {
         "1week": "1_week",
         "2weeks": "2_weeks",
@@ -189,7 +209,9 @@ def normalize_workout_detail_period(period: str | None) -> str:
     return normalized if normalized in config.WORKOUT_DETAIL_PERIODS else "last_1_year"
 
 
-def workout_detail_period_bounds(period: str, historical_data: pd.DataFrame) -> tuple[str, str]:
+def workout_detail_period_bounds(
+    period: str, historical_data: pd.DataFrame
+) -> tuple[str, str]:
     """Calculate inclusive date bounds for the selected workout detail period."""
     if historical_data.empty:
         return "", ""
@@ -230,10 +252,14 @@ def parse_graph_selection(args) -> list[str]:
 
     comma_graphs = args.get("graph_fields", "")
     if comma_graphs:
-        requested_graphs.extend(graph.strip() for graph in comma_graphs.split(",") if graph.strip())
+        requested_graphs.extend(
+            graph.strip() for graph in comma_graphs.split(",") if graph.strip()
+        )
 
     if not requested_graphs:
-        return [] if args.get("graphs_submitted") == "1" else list(config.GRAPHABLE_FIELDS)
+        return (
+            [] if args.get("graphs_submitted") == "1" else list(config.GRAPHABLE_FIELDS)
+        )
 
     selected_graphs: list[str] = []
     for graph in requested_graphs:
@@ -257,9 +283,13 @@ def summarize_stats(df: pd.DataFrame) -> dict[str, object]:
 
     distance = float(pd.to_numeric(df["Distance"], errors="coerce").fillna(0).sum())
     duration = int(pd.to_numeric(df["Workout_Time"], errors="coerce").fillna(0).sum())
-    calories = float(pd.to_numeric(df["Total_Calories"], errors="coerce").fillna(0).sum())
+    calories = float(
+        pd.to_numeric(df["Total_Calories"], errors="coerce").fillna(0).sum()
+    )
     average_speed_series = pd.to_numeric(df["Avg_Speed"], errors="coerce").dropna()
-    average_speed = 0.0 if average_speed_series.empty else float(average_speed_series.mean())
+    average_speed = (
+        0.0 if average_speed_series.empty else float(average_speed_series.mean())
+    )
     return {
         "workout_count": int(len(df)),
         "distance": format_distance(distance),
@@ -273,7 +303,14 @@ def build_lifetime_stats(df: pd.DataFrame) -> dict[str, object]:
     """Summarize all-time workout history."""
     summary = summarize_stats(df)
     if df.empty:
-        summary.update({"first_workout": "", "latest_workout": "", "best_distance": "0", "longest_duration": "0m"})
+        summary.update(
+            {
+                "first_workout": "",
+                "latest_workout": "",
+                "best_distance": "0",
+                "longest_duration": "0m",
+            }
+        )
         return summary
 
     distances = pd.to_numeric(df["Distance"], errors="coerce").fillna(0)
@@ -323,19 +360,25 @@ def format_bucket_label(bucket_date: pd.Timestamp, granularity: str) -> str:
 def add_workout_detail_buckets(df: pd.DataFrame, period: str) -> pd.DataFrame:
     """Attach daily, Sunday-weekly, or monthly bucket dates to workout rows."""
     bucketed = df.copy()
-    workout_dates = pd.to_datetime(bucketed["Workout_Date"], errors="coerce").dt.normalize()
+    workout_dates = pd.to_datetime(
+        bucketed["Workout_Date"], errors="coerce"
+    ).dt.normalize()
     granularity = workout_detail_bucket_granularity(period)
     if granularity == "monthly":
         bucketed["Bucket_Date"] = workout_dates.dt.to_period("M").dt.to_timestamp()
     elif granularity == "weekly":
         days_since_sunday = (workout_dates.dt.weekday + 1) % 7
-        bucketed["Bucket_Date"] = workout_dates - pd.to_timedelta(days_since_sunday, unit="D")
+        bucketed["Bucket_Date"] = workout_dates - pd.to_timedelta(
+            days_since_sunday, unit="D"
+        )
     else:
         bucketed["Bucket_Date"] = workout_dates
     return bucketed.dropna(subset=["Bucket_Date"])
 
 
-def build_metric_breakdown(df: pd.DataFrame, metric: str, period: str) -> list[dict[str, object]]:
+def build_metric_breakdown(
+    df: pd.DataFrame, metric: str, period: str
+) -> list[dict[str, object]]:
     """Build chart rows for one Workout Details metric."""
     if df.empty or metric not in config.GRAPHABLE_FIELDS:
         return []
@@ -363,7 +406,9 @@ def build_metric_breakdown(df: pd.DataFrame, metric: str, period: str) -> list[d
     ]
 
 
-def build_workout_details_context(historical_data: pd.DataFrame, period: str, selected_graphs: list[str]) -> dict[str, object]:
+def build_workout_details_context(
+    historical_data: pd.DataFrame, period: str, selected_graphs: list[str]
+) -> dict[str, object]:
     """Build template context for the Workout Details page."""
     from app.workouts.charts import build_workout_detail_charts
 
@@ -381,5 +426,7 @@ def build_workout_details_context(historical_data: pd.DataFrame, period: str, se
         "detail_summary": summarize_stats(filtered_data),
         "lifetime_stats": build_lifetime_stats(historical_data),
         "detail_record_count": len(filtered_data),
-        "detail_charts": build_workout_detail_charts(filtered_data, period, selected_graphs),
+        "detail_charts": build_workout_detail_charts(
+            filtered_data, period, selected_graphs
+        ),
     }

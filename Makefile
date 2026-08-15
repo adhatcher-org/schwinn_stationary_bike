@@ -1,4 +1,10 @@
+SHELL := /bin/bash
+
 UV ?= uv
+UV_CACHE_DIR ?= /tmp/schwinn-uv-cache
+UV_RUN = UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV) run --no-sync
+RUFF_RUN = RUFF_CACHE_DIR=/tmp/schwinn-ruff-cache $(UV_RUN) ruff
+PYTEST_RUN = $(UV_RUN) pytest -p no:cacheprovider
 IMAGE ?= schwinn:latest
 PLATFORM ?= linux/amd64
 PORT ?= 8080
@@ -7,23 +13,40 @@ DATA_DIR ?= /app/data
 DOCKER_TEST_PORT ?= 18080
 DOCKER_TEST_NAME ?= schwinn-ui-test
 
-.PHONY: install lock test coverage security run build docker-build docker-run docker-ui-test local-test precommit clean
+.PHONY: check format lint test coverage security deps-check requirements-check npm-lock-check install lock run build docker-build docker-run docker-ui-test local-test precommit clean
 
 install:
 	$(UV) sync
 
 lock:
-	$(UV) lock
+	UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV) lock
+
+check: format lint test coverage security deps-check
+
+format:
+	$(RUFF_RUN) format --check .
+
+lint:
+	$(RUFF_RUN) check .
 
 test:
-	$(UV) run pytest -q
+	$(PYTEST_RUN) -q
 
 coverage:
-	$(UV) run pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=95
+	COVERAGE_FILE=/tmp/schwinn-coverage $(PYTEST_RUN) --cov=app --cov-report=term-missing --cov-fail-under=95
 
 security:
-	$(UV) run pip-audit
-	$(UV) run bandit -r app -x app/logs
+	$(UV_RUN) pip-audit
+	$(UV_RUN) bandit -r app -x app/logs
+
+deps-check: requirements-check npm-lock-check
+
+requirements-check:
+	@set -euo pipefail; \
+	diff -u <(grep -v '^#' requirements.txt) <(UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV) export --frozen --no-dev --format requirements-txt --no-hashes | grep -v '^#')
+
+npm-lock-check:
+	npm ci --ignore-scripts --dry-run
 
 local-test: test coverage security docker-ui-test
 

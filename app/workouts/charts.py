@@ -62,7 +62,9 @@ def metric_axis_title(metric: str) -> str:
     return field_label(metric)
 
 
-def build_metric_bar_chart(metric: str, rows: list[dict[str, object]], *, include_plotlyjs: str | bool) -> str | None:
+def build_metric_bar_chart(
+    metric: str, rows: list[dict[str, object]], *, include_plotlyjs: str | bool
+) -> str | None:
     """Render one Workout Details metric as a responsive Plotly bar chart."""
     if not rows:
         return None
@@ -96,14 +98,20 @@ def build_metric_bar_chart(metric: str, rows: list[dict[str, object]], *, includ
     )
 
 
-def build_workout_detail_charts(df: pd.DataFrame, period: str, selected_graphs: list[str]) -> list[dict[str, object]]:
+def build_workout_detail_charts(
+    df: pd.DataFrame, period: str, selected_graphs: list[str]
+) -> list[dict[str, object]]:
     """Build all selected Workout Details charts."""
     charts = []
     include_plotlyjs: str | bool = "cdn"
     for metric in selected_graphs:
         rows = build_metric_breakdown(df, metric, period)
-        chart_html = build_metric_bar_chart(metric, rows, include_plotlyjs=include_plotlyjs)
+        chart_html = build_metric_bar_chart(
+            metric, rows, include_plotlyjs=include_plotlyjs
+        )
         if chart_html:
-            charts.append({"field": metric, "label": field_label(metric), "html": chart_html})
+            charts.append(
+                {"field": metric, "label": field_label(metric), "html": chart_html}
+            )
             include_plotlyjs = False
     return charts
