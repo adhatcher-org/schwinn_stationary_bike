@@ -44,12 +44,16 @@ def configure_logging() -> None:
     uvicorn_logger.propagate = False
 
 
-def audit_auth_event(action: str, email: str, result: str, *, actor_email: str = "", details: str = "") -> None:
+def audit_auth_event(
+    action: str, email: str, result: str, *, actor_email: str = "", details: str = ""
+) -> None:
     """Record authentication audit events in metrics and logs."""
     AUTH_EVENT_COUNT.labels(action, result).inc()
     subject_id = email_audit_id(email)
     actor_id = email_audit_id(actor_email)
-    log_method = get_app().logger.info if result == "success" else get_app().logger.warning
+    log_method = (
+        get_app().logger.info if result == "success" else get_app().logger.warning
+    )
     log_method(
         "auth_event action=%s result=%s subject_id=%s actor_id=%s details=%s",
         action,

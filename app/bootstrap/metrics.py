@@ -10,7 +10,9 @@ def _collector(name: str):
     return REGISTRY._names_to_collectors.get(name)  # noqa: SLF001
 
 
-def counter(name: str, documentation: str, labelnames: list[str] | None = None) -> Counter:
+def counter(
+    name: str, documentation: str, labelnames: list[str] | None = None
+) -> Counter:
     """Create or reuse a Prometheus counter."""
     existing = _collector(name) or _collector(f"{name}_total")
     if existing is not None:
@@ -18,7 +20,9 @@ def counter(name: str, documentation: str, labelnames: list[str] | None = None) 
     return Counter(name, documentation, labelnames or [])
 
 
-def histogram(name: str, documentation: str, labelnames: list[str] | None = None) -> Histogram:
+def histogram(
+    name: str, documentation: str, labelnames: list[str] | None = None
+) -> Histogram:
     """Create or reuse a Prometheus histogram."""
     existing = _collector(name)
     if existing is not None:

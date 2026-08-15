@@ -42,12 +42,18 @@ def env_first(*names: str, default: str = "") -> str:
 
 load_dotenv_file(ROOT_DIR / ".env")
 
-SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "").lower() in {"1", "true", "yes"}
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "").lower() in {
+    "1",
+    "true",
+    "yes",
+}
 secret_key = os.getenv("SECRET_KEY") or secrets.token_urlsafe(64)
 
 DATA_DIR = Path(os.getenv("DATA_DIR", str(BASE_DIR / "data"))).resolve()
 DAT_FILE = Path(os.getenv("DAT_FILE", str(DATA_DIR / "AARON.DAT"))).resolve()
-HISTORY_FILE = Path(os.getenv("HISTORY_FILE", str(DATA_DIR / "Workout_History.csv"))).resolve()
+HISTORY_FILE = Path(
+    os.getenv("HISTORY_FILE", str(DATA_DIR / "Workout_History.csv"))
+).resolve()
 AUTH_DB_FILE = Path(os.getenv("AUTH_DB_FILE", str(DATA_DIR / "users.db"))).resolve()
 LOG_DIR = Path(os.getenv("LOG_DIR", str(BASE_DIR / "logs"))).resolve()
 LOG_FILE = Path(os.getenv("LOG_FILE", str(LOG_DIR / "app.log"))).resolve()
@@ -59,11 +65,23 @@ MAIL_SERVER = env_first("MAIL_SERVER", "SMTP_HOST")
 MAIL_PORT = int(env_first("MAIL_PORT", "SMTP_PORT", default="587"))
 MAIL_USERNAME = env_first("MAIL_USERNAME", "SMTP_NAME")
 MAIL_PASSWORD = env_first("MAIL_PASSWORD", "SMTP_PASSWORD")
-MAIL_USE_TLS = env_first("MAIL_USE_TLS").lower() in {"1", "true", "yes"} or SMTP_SECURE == "tls"
-MAIL_USE_SSL = env_first("MAIL_USE_SSL").lower() in {"1", "true", "yes"} or SMTP_SECURE in {"ssl", "smtps"}
-MAIL_FROM = env_first("MAIL_FROM", "MAIL_FROM_ADDRESS", default=MAIL_USERNAME or "no-reply@schwinn.local")
-PASSWORD_RESET_SALT = env_first("PASSWORD_RESET_SALT", default="schwinn-password-reset-salt")
-PASSWORD_RESET_MAX_AGE_SECONDS = int(os.getenv("PASSWORD_RESET_MAX_AGE_SECONDS", "3600"))
+MAIL_USE_TLS = (
+    env_first("MAIL_USE_TLS").lower() in {"1", "true", "yes"} or SMTP_SECURE == "tls"
+)
+MAIL_USE_SSL = env_first("MAIL_USE_SSL").lower() in {
+    "1",
+    "true",
+    "yes",
+} or SMTP_SECURE in {"ssl", "smtps"}
+MAIL_FROM = env_first(
+    "MAIL_FROM", "MAIL_FROM_ADDRESS", default=MAIL_USERNAME or "no-reply@schwinn.local"
+)
+PASSWORD_RESET_SALT = env_first(
+    "PASSWORD_RESET_SALT", default="schwinn-password-reset-salt"
+)
+PASSWORD_RESET_MAX_AGE_SECONDS = int(
+    os.getenv("PASSWORD_RESET_MAX_AGE_SECONDS", "3600")
+)
 USER_SESSION_KEY = "user_id"
 
 AVATAR_SIZE_MIN_PX = 48
@@ -130,5 +148,9 @@ METRIC_AGGREGATIONS = {
     "RPM": "mean",
     "Level": "mean",
 }
-DAT_IMPORT_ERROR_MESSAGE = "Unable to parse the uploaded DAT file. Check the file contents and try again."
-HISTORY_IMPORT_ERROR_MESSAGE = "Unable to import the historical CSV file. Verify the file format and try again."
+DAT_IMPORT_ERROR_MESSAGE = (
+    "Unable to parse the uploaded DAT file. Check the file contents and try again."
+)
+HISTORY_IMPORT_ERROR_MESSAGE = (
+    "Unable to import the historical CSV file. Verify the file format and try again."
+)

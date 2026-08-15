@@ -57,8 +57,12 @@ def display_user_name(user) -> str:
     """Return the best display name for a user row."""
     if user is None:
         return ""
-    first_name = normalize_name(str(user["first_name"])) if "first_name" in user.keys() else ""
-    last_name = normalize_name(str(user["last_name"])) if "last_name" in user.keys() else ""
+    first_name = (
+        normalize_name(str(user["first_name"])) if "first_name" in user.keys() else ""
+    )
+    last_name = (
+        normalize_name(str(user["last_name"])) if "last_name" in user.keys() else ""
+    )
     full_name = compose_full_name(first_name, last_name)
     if full_name:
         return full_name
@@ -72,7 +76,9 @@ def get_user_by_email(email: str) -> sqlite3.Row | None:
     if not normalized:
         return None
     with get_db_connection() as connection:
-        return connection.execute("SELECT * FROM users WHERE email = ?", (normalized,)).fetchone()
+        return connection.execute(
+            "SELECT * FROM users WHERE email = ?", (normalized,)
+        ).fetchone()
 
 
 def get_user_by_id(user_id: int | None) -> sqlite3.Row | None:
@@ -80,7 +86,9 @@ def get_user_by_id(user_id: int | None) -> sqlite3.Row | None:
     if not user_id:
         return None
     with get_db_connection() as connection:
-        return connection.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return connection.execute(
+            "SELECT * FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
 
 
 def create_user(
@@ -97,7 +105,9 @@ def create_user(
     normalized = normalize_email(email)
     normalized_first_name = normalize_name(first_name)
     normalized_last_name = normalize_name(last_name)
-    normalized_name = normalize_name(name) or compose_full_name(normalized_first_name, normalized_last_name)
+    normalized_name = normalize_name(name) or compose_full_name(
+        normalized_first_name, normalized_last_name
+    )
     if role not in config.VALID_ROLES:
         raise ValueError(f"Unsupported role: {role}")
     password_hash = generate_password_hash(password)
@@ -129,18 +139,24 @@ def update_user_password(user_id: int, password: str) -> None:
     """Replace the stored password hash for a user."""
     password_hash = generate_password_hash(password)
     with get_db_connection() as connection:
-        connection.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+        connection.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id)
+        )
         connection.commit()
 
 
 def update_user_profile(user_id: int, *, name: str) -> None:
     """Update a user display name."""
     with get_db_connection() as connection:
-        connection.execute("UPDATE users SET name = ? WHERE id = ?", (normalize_name(name), user_id))
+        connection.execute(
+            "UPDATE users SET name = ? WHERE id = ?", (normalize_name(name), user_id)
+        )
         connection.commit()
 
 
-def update_admin_identity(user_id: int, *, first_name: str, last_name: str, email: str, email_verified: bool) -> None:
+def update_admin_identity(
+    user_id: int, *, first_name: str, last_name: str, email: str, email_verified: bool
+) -> None:
     """Update the verified identity fields for an admin user."""
     normalized_first_name = normalize_name(first_name)
     normalized_last_name = normalize_name(last_name)
@@ -152,12 +168,21 @@ def update_admin_identity(user_id: int, *, first_name: str, last_name: str, emai
             SET first_name = ?, last_name = ?, name = ?, email = ?, email_verified = ?
             WHERE id = ?
             """,
-            (normalized_first_name, normalized_last_name, full_name, normalize_email(email), 1 if email_verified else 0, user_id),
+            (
+                normalized_first_name,
+                normalized_last_name,
+                full_name,
+                normalize_email(email),
+                1 if email_verified else 0,
+                user_id,
+            ),
         )
         connection.commit()
 
 
-def update_user_avatar(user_id: int, avatar_data: bytes, *, avatar_mime: str = config.AVATAR_MIME_TYPE) -> None:
+def update_user_avatar(
+    user_id: int, avatar_data: bytes, *, avatar_mime: str = config.AVATAR_MIME_TYPE
+) -> None:
     """Store resized avatar bytes for a user."""
     with get_db_connection() as connection:
         connection.execute(
@@ -186,7 +211,9 @@ def delete_user(user_id: int) -> None:
 def list_users() -> list[sqlite3.Row]:
     """List users sorted by display name or email."""
     with get_db_connection() as connection:
-        return connection.execute("SELECT * FROM users ORDER BY COALESCE(NULLIF(name, ''), email) ASC").fetchall()
+        return connection.execute(
+            "SELECT * FROM users ORDER BY COALESCE(NULLIF(name, ''), email) ASC"
+        ).fetchall()
 
 
 def is_registration_enabled() -> bool:
@@ -202,7 +229,9 @@ def set_registration_enabled(enabled: bool) -> bool:
 def admin_count() -> int:
     """Count currently configured admin users."""
     with get_db_connection() as connection:
-        row = connection.execute("SELECT COUNT(*) AS count FROM users WHERE role = ?", (config.ADMIN_ROLE,)).fetchone()
+        row = connection.execute(
+            "SELECT COUNT(*) AS count FROM users WHERE role = ?", (config.ADMIN_ROLE,)
+        ).fetchone()
     return int(row["count"]) if row else 0
 
 

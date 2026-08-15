@@ -21,10 +21,16 @@ def template_url_for(request: Request, name: str, **path_params: object) -> str:
 
 def template_url_context(request: Request) -> dict[str, object]:
     """Expose URL helpers to Jinja templates."""
-    return {"url_for": lambda name, **path_params: template_url_for(request, name, **path_params)}
+    return {
+        "url_for": lambda name, **path_params: template_url_for(
+            request, name, **path_params
+        )
+    }
 
 
-templates = Jinja2Templates(directory=str(config.TEMPLATES_DIR), context_processors=[template_url_context])
+templates = Jinja2Templates(
+    directory=str(config.TEMPLATES_DIR), context_processors=[template_url_context]
+)
 
 
 def render(
@@ -46,7 +52,9 @@ def render(
             "admin_exists": admin_exists(),
         }
     )
-    return templates.TemplateResponse(request, template_name, page_context, status_code=status_code)
+    return templates.TemplateResponse(
+        request, template_name, page_context, status_code=status_code
+    )
 
 
 def redirect_to(url: str, status_code: int = 302) -> RedirectResponse:

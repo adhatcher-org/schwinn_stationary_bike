@@ -38,7 +38,14 @@ from app.web import redirect_to, render, route_url
 router = APIRouter()
 
 
-def setup_admin_context(message: str, email: str, first_name: str, last_name: str, email_verified: bool, existing_admin: bool) -> dict[str, object]:
+def setup_admin_context(
+    message: str,
+    email: str,
+    first_name: str,
+    last_name: str,
+    email_verified: bool,
+    existing_admin: bool,
+) -> dict[str, object]:
     """Build template context for admin setup forms."""
     return {
         "message": message,
@@ -62,15 +69,23 @@ def update_admin_setup(
 ):
     """Validate and update an existing unverified admin identity."""
     message = "Verify or correct the admin email address before continuing."
-    current_first_name = normalize_name(str(user["first_name"])) if "first_name" in user.keys() else ""
-    current_last_name = normalize_name(str(user["last_name"])) if "last_name" in user.keys() else ""
+    current_first_name = (
+        normalize_name(str(user["first_name"])) if "first_name" in user.keys() else ""
+    )
+    current_last_name = (
+        normalize_name(str(user["last_name"])) if "last_name" in user.keys() else ""
+    )
     if not current_first_name and not current_last_name:
         name_parts = display_user_name(user).split()
         current_first_name = name_parts[0] if name_parts else ""
         current_last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-    display_first_name = normalize_name(first_name if first_name is not None else current_first_name)
-    display_last_name = normalize_name(last_name if last_name is not None else current_last_name)
+    display_first_name = normalize_name(
+        first_name if first_name is not None else current_first_name
+    )
+    display_last_name = normalize_name(
+        last_name if last_name is not None else current_last_name
+    )
     display_email = normalize_email(email if email is not None else str(user["email"]))
 
     if submitted:
@@ -92,13 +107,27 @@ def update_admin_setup(
                 email=display_email,
                 email_verified=True,
             )
-            audit_auth_event("admin_email_verify", display_email, "success", details="admin email verified")
-            return redirect_to(route_url(request, "admin_dashboard", message="Admin email verified."))
+            audit_auth_event(
+                "admin_email_verify",
+                display_email,
+                "success",
+                details="admin email verified",
+            )
+            return redirect_to(
+                route_url(request, "admin_dashboard", message="Admin email verified.")
+            )
 
     return render(
         request,
         "setup_admin.html",
-        setup_admin_context(message, display_email, display_first_name, display_last_name, email_verified, True),
+        setup_admin_context(
+            message,
+            display_email,
+            display_first_name,
+            display_last_name,
+            email_verified,
+            True,
+        ),
     )
 
 
@@ -107,12 +136,18 @@ def setup_admin_get(request: Request):
     """Render or redirect the admin setup flow."""
     current = current_user(request)
     if admin_exists():
-        if current is not None and str(current["role"]) == config.ADMIN_ROLE and not admin_email_is_verified(current):
+        if (
+            current is not None
+            and str(current["role"]) == config.ADMIN_ROLE
+            and not admin_email_is_verified(current)
+        ):
             return update_admin_setup(request, current)
         if current is not None:
             return redirect_to(route_url(request, "welcome"))
         return redirect_to(route_url(request, "login"))
-    return render(request, "setup_admin.html", setup_admin_context("", "", "", "", False, False))
+    return render(
+        request, "setup_admin.html", setup_admin_context("", "", "", "", False, False)
+    )
 
 
 @router.post("/setup-admin", response_class=HTMLResponse, name="setup_admin_post")
@@ -129,7 +164,11 @@ def setup_admin_post(
     current = current_user(request)
     verified = email_verified == "true"
     if admin_exists():
-        if current is not None and str(current["role"]) == config.ADMIN_ROLE and not admin_email_is_verified(current):
+        if (
+            current is not None
+            and str(current["role"]) == config.ADMIN_ROLE
+            and not admin_email_is_verified(current)
+        ):
             return update_admin_setup(
                 request,
                 current,
@@ -171,11 +210,40 @@ def setup_admin_post(
         if not set_registration_enabled(False):
             delete_user(int(user["id"]))
             message = "We couldn't finish admin setup right now. Please try again."
-            return render(request, "setup_admin.html", setup_admin_context(message, normalized_email, normalized_first_name, normalized_last_name, verified, False))
+            return render(
+                request,
+                "setup_admin.html",
+                setup_admin_context(
+                    message,
+                    normalized_email,
+                    normalized_first_name,
+                    normalized_last_name,
+                    verified,
+                    False,
+                ),
+            )
         login_user(request, user)
-        audit_auth_event("admin_bootstrap", normalized_email, "success", details="initial admin account created")
-        return redirect_to(route_url(request, "admin_dashboard", message="Admin account created."))
-    return render(request, "setup_admin.html", setup_admin_context(message, normalized_email, normalized_first_name, normalized_last_name, verified, False))
+        audit_auth_event(
+            "admin_bootstrap",
+            normalized_email,
+            "success",
+            details="initial admin account created",
+        )
+        return redirect_to(
+            route_url(request, "admin_dashboard", message="Admin account created.")
+        )
+    return render(
+        request,
+        "setup_admin.html",
+        setup_admin_context(
+            message,
+            normalized_email,
+            normalized_first_name,
+            normalized_last_name,
+            verified,
+            False,
+        ),
+    )
 
 
 def admin_required(request: Request):
@@ -191,7 +259,9 @@ def admin_dashboard(request: Request):
     guard = admin_required(request)
     if guard is not None:
         return guard
-    return render(request, "admin.html", {"message": request.query_params.get("message", "")})
+    return render(
+        request, "admin.html", {"message": request.query_params.get("message", "")}
+    )
 
 
 @router.post("/admin", response_class=HTMLResponse, name="admin_dashboard_post")
@@ -200,7 +270,11 @@ def admin_dashboard_post(request: Request, registration_enabled: str = Form(""))
     guard = admin_required(request)
     if guard is not None:
         return guard
-    message = "Registration settings updated." if set_registration_enabled(registration_enabled == "true") else "We couldn't update registration settings right now."
+    message = (
+        "Registration settings updated."
+        if set_registration_enabled(registration_enabled == "true")
+        else "We couldn't update registration settings right now."
+    )
     return render(request, "admin.html", {"message": message})
 
 
@@ -210,7 +284,15 @@ def admin_users_get(request: Request):
     guard = admin_required(request)
     if guard is not None:
         return guard
-    return render(request, "admin_users.html", {"message": request.query_params.get("message", ""), "users": list_users(), "roles": sorted(config.VALID_ROLES)})
+    return render(
+        request,
+        "admin_users.html",
+        {
+            "message": request.query_params.get("message", ""),
+            "users": list_users(),
+            "roles": sorted(config.VALID_ROLES),
+        },
+    )
 
 
 @router.post("/admin/users", response_class=HTMLResponse, name="admin_users_post")
@@ -238,62 +320,178 @@ def admin_users_post(
 
     if action == "create_user":
         if not target_name:
-            audit_auth_event("user_create", target_email, "failure", actor_email=actor_email, details="missing name")
+            audit_auth_event(
+                "user_create",
+                target_email,
+                "failure",
+                actor_email=actor_email,
+                details="missing name",
+            )
             message = "Enter a name for the new user."
         elif not target_email:
-            audit_auth_event("user_create", target_email, "failure", actor_email=actor_email, details="missing email")
+            audit_auth_event(
+                "user_create",
+                target_email,
+                "failure",
+                actor_email=actor_email,
+                details="missing email",
+            )
             message = "Enter an email address for the new user."
         elif "@" not in target_email:
-            audit_auth_event("user_create", target_email, "failure", actor_email=actor_email, details="invalid email")
+            audit_auth_event(
+                "user_create",
+                target_email,
+                "failure",
+                actor_email=actor_email,
+                details="invalid email",
+            )
             message = "Enter a valid email address."
         elif target_role not in config.VALID_ROLES:
-            audit_auth_event("user_create", target_email, "failure", actor_email=actor_email, details="invalid role")
+            audit_auth_event(
+                "user_create",
+                target_email,
+                "failure",
+                actor_email=actor_email,
+                details="invalid role",
+            )
             message = "Choose a valid user role."
         elif get_user_by_email(target_email) is not None:
-            audit_auth_event("user_create", target_email, "failure", actor_email=actor_email, details="email already exists")
+            audit_auth_event(
+                "user_create",
+                target_email,
+                "failure",
+                actor_email=actor_email,
+                details="email already exists",
+            )
             message = "That email address already belongs to an existing user."
         else:
             temporary_password = generate_temporary_password()
-            create_user(target_email, temporary_password, role=target_role, name=target_name)
-            audit_auth_event("user_create", target_email, "success", actor_email=actor_email, details=f"user created role={target_role}")
+            create_user(
+                target_email, temporary_password, role=target_role, name=target_name
+            )
+            audit_auth_event(
+                "user_create",
+                target_email,
+                "success",
+                actor_email=actor_email,
+                details=f"user created role={target_role}",
+            )
             try:
-                reset_link = build_reset_link(request, generate_password_reset_token(target_email))
+                reset_link = build_reset_link(
+                    request, generate_password_reset_token(target_email)
+                )
                 send_password_reset_email(target_email, reset_link)
-                audit_auth_event("password_reset_email", target_email, "success", actor_email=actor_email, details="new user setup email sent")
+                audit_auth_event(
+                    "password_reset_email",
+                    target_email,
+                    "success",
+                    actor_email=actor_email,
+                    details="new user setup email sent",
+                )
                 message = f"Created {target_email} and sent a password setup email."
             except Exception:
-                audit_auth_event("password_reset_email", target_email, "failure", actor_email=actor_email, details="new user setup email send failed")
+                audit_auth_event(
+                    "password_reset_email",
+                    target_email,
+                    "failure",
+                    actor_email=actor_email,
+                    details="new user setup email send failed",
+                )
                 message = f"Created {target_email}, but the password setup email could not be sent."
     elif action == "delete_user" and target_user is not None:
         if str(target_user["role"]) == config.ADMIN_ROLE and admin_count() == 1:
-            audit_auth_event("user_delete", str(target_user["email"]), "failure", actor_email=actor_email, details="cannot delete last admin")
+            audit_auth_event(
+                "user_delete",
+                str(target_user["email"]),
+                "failure",
+                actor_email=actor_email,
+                details="cannot delete last admin",
+            )
             message = "You cannot delete the last admin account."
         else:
             delete_user(int(target_user["id"]))
-            audit_auth_event("user_delete", str(target_user["email"]), "success", actor_email=actor_email, details="user deleted")
+            audit_auth_event(
+                "user_delete",
+                str(target_user["email"]),
+                "success",
+                actor_email=actor_email,
+                details="user deleted",
+            )
             message = f"Deleted {target_user['email']}."
     elif action == "update_role" and target_user is not None:
         if target_role not in config.VALID_ROLES:
-            audit_auth_event("user_role_update", str(target_user["email"]), "failure", actor_email=actor_email, details="invalid role")
+            audit_auth_event(
+                "user_role_update",
+                str(target_user["email"]),
+                "failure",
+                actor_email=actor_email,
+                details="invalid role",
+            )
             message = "Choose a valid user role."
-        elif str(target_user["role"]) == config.ADMIN_ROLE and target_role != config.ADMIN_ROLE and admin_count() == 1:
-            audit_auth_event("user_role_update", str(target_user["email"]), "failure", actor_email=actor_email, details="cannot demote last admin")
+        elif (
+            str(target_user["role"]) == config.ADMIN_ROLE
+            and target_role != config.ADMIN_ROLE
+            and admin_count() == 1
+        ):
+            audit_auth_event(
+                "user_role_update",
+                str(target_user["email"]),
+                "failure",
+                actor_email=actor_email,
+                details="cannot demote last admin",
+            )
             message = "You cannot demote the last admin account."
         else:
             update_user_role(int(target_user["id"]), target_role)
-            audit_auth_event("user_role_update", str(target_user["email"]), "success", actor_email=actor_email, details=f"role updated to {target_role}")
+            audit_auth_event(
+                "user_role_update",
+                str(target_user["email"]),
+                "success",
+                actor_email=actor_email,
+                details=f"role updated to {target_role}",
+            )
             message = f"Updated {target_user['email']} to {target_role}."
     elif action == "send_reset" and target_user is not None:
         try:
-            reset_link = build_reset_link(request, generate_password_reset_token(str(target_user["email"])))
+            reset_link = build_reset_link(
+                request, generate_password_reset_token(str(target_user["email"]))
+            )
             send_password_reset_email(str(target_user["email"]), reset_link)
-            audit_auth_event("password_reset_email", str(target_user["email"]), "success", actor_email=actor_email, details="admin-triggered reset email sent")
+            audit_auth_event(
+                "password_reset_email",
+                str(target_user["email"]),
+                "success",
+                actor_email=actor_email,
+                details="admin-triggered reset email sent",
+            )
             message = f"Sent a password reset email to {target_user['email']}."
         except Exception:
-            audit_auth_event("password_reset_email", str(target_user["email"]), "failure", actor_email=actor_email, details="admin-triggered reset email send failed")
-            message = f"Could not send a password reset email to {target_user['email']}."
+            audit_auth_event(
+                "password_reset_email",
+                str(target_user["email"]),
+                "failure",
+                actor_email=actor_email,
+                details="admin-triggered reset email send failed",
+            )
+            message = (
+                f"Could not send a password reset email to {target_user['email']}."
+            )
     else:
-        audit_auth_event("admin_user_action", target_email, "failure", actor_email=actor_email, details="invalid admin action")
+        audit_auth_event(
+            "admin_user_action",
+            target_email,
+            "failure",
+            actor_email=actor_email,
+            details="invalid admin action",
+        )
         message = "The requested admin action could not be completed."
 
-    return render(request, "admin_users.html", {"message": message, "users": list_users(), "roles": sorted(config.VALID_ROLES)})
+    return render(
+        request,
+        "admin_users.html",
+        {
+            "message": message,
+            "users": list_users(),
+            "roles": sorted(config.VALID_ROLES),
+        },
+    )

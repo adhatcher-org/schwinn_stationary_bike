@@ -27,6 +27,7 @@ dev = [
     "pip-audit>=2.10.0,<3.0.0",
     "pytest>=9.0.3,<10.0.0",
     "pytest-cov>=7.1.0,<8.0.0",
+    "ruff>=0.14.0,<0.16.0",
 ]
 
 [tool.uv]
@@ -36,3 +37,7 @@ package = false
 minversion = "8.0"
 addopts = "-ra"
 testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# This module deliberately re-exports application helpers for legacy imports.
+"app/app.py" = ["F401"]

@@ -41,12 +41,18 @@ def password_reset_serializer() -> URLSafeTimedSerializer:
 def generate_password_reset_token(email: str) -> str:
     """Create a signed password reset token for an email."""
     try:
-        return password_reset_serializer().dumps(normalize_email(email), salt=config.PASSWORD_RESET_SALT)
+        return password_reset_serializer().dumps(
+            normalize_email(email), salt=config.PASSWORD_RESET_SALT
+        )
     except Exception as exc:
-        raise PasswordResetTokenError("Unable to generate password reset token.") from exc
+        raise PasswordResetTokenError(
+            "Unable to generate password reset token."
+        ) from exc
 
 
-def verify_password_reset_token(token: str, *, max_age: int | None = None) -> sqlite3.Row | None:
+def verify_password_reset_token(
+    token: str, *, max_age: int | None = None
+) -> sqlite3.Row | None:
     """Resolve a password reset token to a user row."""
     try:
         email = password_reset_serializer().loads(
@@ -54,7 +60,7 @@ def verify_password_reset_token(token: str, *, max_age: int | None = None) -> sq
             salt=config.PASSWORD_RESET_SALT,
             max_age=max_age or config.PASSWORD_RESET_MAX_AGE_SECONDS,
         )
-    except (BadSignature, SignatureExpired, Exception):
+    except BadSignature, SignatureExpired, Exception:
         return None
     return get_user_by_email(str(email))
 
@@ -72,7 +78,11 @@ def current_user_is_admin(request: Request) -> bool:
 
 def admin_email_is_verified(user) -> bool:
     """Return whether an admin account has verified identity fields."""
-    return bool(user and str(user["role"]) == config.ADMIN_ROLE and int(user["email_verified"] or 0) == 1)
+    return bool(
+        user
+        and str(user["role"]) == config.ADMIN_ROLE
+        and int(user["email_verified"] or 0) == 1
+    )
 
 
 def login_user(request: Request, user: sqlite3.Row) -> None:

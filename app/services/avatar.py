@@ -14,7 +14,11 @@ from app.services.users import display_user_name
 def user_initials(user) -> str:
     """Compute initials for user avatar fallbacks."""
     display_name = display_user_name(user)
-    words = [word for word in display_name.replace("@", " ").replace(".", " ").split() if word]
+    words = [
+        word
+        for word in display_name.replace("@", " ").replace(".", " ").split()
+        if word
+    ]
     if not words:
         return "U"
     if len(words) == 1:
@@ -24,19 +28,27 @@ def user_initials(user) -> str:
 
 def user_has_avatar(user) -> bool:
     """Return whether a user row contains avatar data."""
-    return bool(user is not None and "avatar_data" in user.keys() and user["avatar_data"])
+    return bool(
+        user is not None and "avatar_data" in user.keys() and user["avatar_data"]
+    )
 
 
 def parse_avatar_size(raw_size: str) -> int:
     """Clamp a requested avatar size to supported bounds."""
     try:
         requested_size = int(raw_size)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         requested_size = config.AVATAR_SIZE_DEFAULT_PX
-    return max(config.AVATAR_SIZE_MIN_PX, min(requested_size, config.AVATAR_SIZE_MAX_PX))
+    return max(
+        config.AVATAR_SIZE_MIN_PX, min(requested_size, config.AVATAR_SIZE_MAX_PX)
+    )
 
 
-async def process_avatar_upload(upload_file: UploadFile | None, *, requested_size: int = config.AVATAR_SIZE_DEFAULT_PX) -> bytes:
+async def process_avatar_upload(
+    upload_file: UploadFile | None,
+    *,
+    requested_size: int = config.AVATAR_SIZE_DEFAULT_PX,
+) -> bytes:
     """Validate and resize an uploaded avatar image."""
     if not upload_file or not upload_file.filename:
         raise ValueError("Choose an image file to upload.")

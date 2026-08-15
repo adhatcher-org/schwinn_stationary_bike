@@ -54,7 +54,9 @@ def welcome(request: Request):
     return render(request, "welcome.html", build_page_context(historical_data))
 
 
-@router.get("/workout-performance", response_class=HTMLResponse, name="workout_performance")
+@router.get(
+    "/workout-performance", response_class=HTMLResponse, name="workout_performance"
+)
 def workout_performance(request: Request):
     """Render workout charts and history table."""
     from app.workouts.analytics import current_day
@@ -66,14 +68,24 @@ def workout_performance(request: Request):
     start_date = request.query_params.get("start_date", default_start_date)
     end_date = request.query_params.get("end_date", "")
 
-    selected_fields = [field for field in request.query_params.getlist("fields") if field in config.GRAPHABLE_FIELDS]
+    selected_fields = [
+        field
+        for field in request.query_params.getlist("fields")
+        if field in config.GRAPHABLE_FIELDS
+    ]
     if not selected_fields:
         selected_fields = ["Distance", "Avg_Speed", "Workout_Time"]
 
     filtered_data = filter_data(historical_data, start_date, end_date)
     chart_html = build_chart(filtered_data, selected_fields)
-    historical_table_data = filtered_data.sort_values(by=["Workout_Date"], ascending=False).reset_index(drop=True)
-    table_html = historical_table_data.to_html(classes="table table-striped", index=False) if not historical_table_data.empty else ""
+    historical_table_data = filtered_data.sort_values(
+        by=["Workout_Date"], ascending=False
+    ).reset_index(drop=True)
+    table_html = (
+        historical_table_data.to_html(classes="table table-striped", index=False)
+        if not historical_table_data.empty
+        else ""
+    )
 
     return render(
         request,
@@ -97,13 +109,17 @@ def workout_details(request: Request):
     """Render responsive Workout Details stats charts."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     historical_data = load_history_file(config.HISTORY_FILE)
-    selected_period = normalize_workout_detail_period(request.query_params.get("period", ""))
+    selected_period = normalize_workout_detail_period(
+        request.query_params.get("period", "")
+    )
     selected_graphs = parse_graph_selection(request.query_params)
     return render(
         request,
         "workout_details.html",
         {
-            **build_workout_details_context(historical_data, selected_period, selected_graphs),
+            **build_workout_details_context(
+                historical_data, selected_period, selected_graphs
+            ),
             **build_page_context(historical_data),
         },
     )
@@ -114,11 +130,17 @@ def upload_workout_get(request: Request):
     """Render the DAT workout import form."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     historical_data = load_history_file(config.HISTORY_FILE)
-    return render(request, "upload_workout.html", {"message": "", **build_page_context(historical_data)})
+    return render(
+        request,
+        "upload_workout.html",
+        {"message": "", **build_page_context(historical_data)},
+    )
 
 
 @router.post("/upload-workout", response_class=HTMLResponse, name="upload_workout_post")
-async def upload_workout_post(request: Request, dat_file: UploadFile | None = File(None)):
+async def upload_workout_post(
+    request: Request, dat_file: UploadFile | None = File(None)
+):
     """Import workouts from an uploaded or disk DAT file."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     message = ""
@@ -130,23 +152,43 @@ async def upload_workout_post(request: Request, dat_file: UploadFile | None = Fi
             FILE_IMPORT_LATENCY.labels("upload").observe(perf_counter() - start)
             historical_data = merge_data(new_data, historical_data)
             save_history(historical_data, config.HISTORY_FILE)
-            get_logger().info("DAT upload merged: file=%s rows=%s", dat_file.filename, len(new_data))
-            return redirect_to(route_url(request, "workout_performance", message=f"Uploaded {dat_file.filename} and merged {len(new_data)} workouts."))
+            get_logger().info(
+                "DAT upload merged: file=%s rows=%s", dat_file.filename, len(new_data)
+            )
+            return redirect_to(
+                route_url(
+                    request,
+                    "workout_performance",
+                    message=f"Uploaded {dat_file.filename} and merged {len(new_data)} workouts.",
+                )
+            )
         if config.DAT_FILE.exists():
             start = perf_counter()
             new_data = read_dat_from_disk(config.DAT_FILE)
             FILE_IMPORT_LATENCY.labels("disk").observe(perf_counter() - start)
             historical_data = merge_data(new_data, historical_data)
             save_history(historical_data, config.HISTORY_FILE)
-            get_logger().info("Disk import merged: file=%s rows=%s", config.DAT_FILE, len(new_data))
-            return redirect_to(route_url(request, "workout_performance", message=f"Loaded {config.DAT_FILE.name} from disk and merged {len(new_data)} workouts."))
+            get_logger().info(
+                "Disk import merged: file=%s rows=%s", config.DAT_FILE, len(new_data)
+            )
+            return redirect_to(
+                route_url(
+                    request,
+                    "workout_performance",
+                    message=f"Loaded {config.DAT_FILE.name} from disk and merged {len(new_data)} workouts.",
+                )
+            )
         message = "No upload provided and no DAT file found on disk."
         get_logger().warning("Workout import attempted without DAT file available")
     except Exception:
         message = config.DAT_IMPORT_ERROR_MESSAGE
         get_logger().warning("DAT parse/import failed")
     historical_data = load_history_file(config.HISTORY_FILE)
-    return render(request, "upload_workout.html", {"message": message, **build_page_context(historical_data)})
+    return render(
+        request,
+        "upload_workout.html",
+        {"message": message, **build_page_context(historical_data)},
+    )
 
 
 @router.get("/upload-history", response_class=HTMLResponse, name="upload_history")
@@ -154,11 +196,17 @@ def upload_history_get(request: Request):
     """Render the historical CSV import form."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     historical_data = load_history_file(config.HISTORY_FILE)
-    return render(request, "upload_history.html", {"message": "", **build_page_context(historical_data)})
+    return render(
+        request,
+        "upload_history.html",
+        {"message": "", **build_page_context(historical_data)},
+    )
 
 
 @router.post("/upload-history", response_class=HTMLResponse, name="upload_history_post")
-async def upload_history_post(request: Request, history_csv_file: UploadFile | None = File(None)):
+async def upload_history_post(
+    request: Request, history_csv_file: UploadFile | None = File(None)
+):
     """Import workouts from an uploaded history CSV."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     message = ""
@@ -172,10 +220,24 @@ async def upload_history_post(request: Request, history_csv_file: UploadFile | N
             FILE_IMPORT_LATENCY.labels("history_csv").observe(perf_counter() - start)
             historical_data = merge_data(uploaded_history, historical_data)
             save_history(historical_data, config.HISTORY_FILE)
-            get_logger().info("History CSV merged: file=%s rows=%s", history_csv_file.filename, len(uploaded_history))
-            return redirect_to(route_url(request, "workout_performance", message=f"Uploaded {history_csv_file.filename} and merged {len(uploaded_history)} historical rows."))
+            get_logger().info(
+                "History CSV merged: file=%s rows=%s",
+                history_csv_file.filename,
+                len(uploaded_history),
+            )
+            return redirect_to(
+                route_url(
+                    request,
+                    "workout_performance",
+                    message=f"Uploaded {history_csv_file.filename} and merged {len(uploaded_history)} historical rows.",
+                )
+            )
     except Exception:
         message = config.HISTORY_IMPORT_ERROR_MESSAGE
         get_logger().warning("History CSV import failed")
     historical_data = load_history_file(config.HISTORY_FILE)
-    return render(request, "upload_history.html", {"message": message, **build_page_context(historical_data)})
+    return render(
+        request,
+        "upload_history.html",
+        {"message": message, **build_page_context(historical_data)},
+    )

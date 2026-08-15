@@ -13,7 +13,12 @@ from app.config import *  # noqa: F403
 from app.db import get_db_connection, get_setting, init_auth_db, set_setting
 from app.logging import audit_auth_event, configure_logging
 from app.middleware import auth_and_metrics_middleware
-from app.routes.account import account_avatar, account_context, account_get, account_post
+from app.routes.account import (
+    account_avatar,
+    account_context,
+    account_get,
+    account_post,
+)
 from app.routes.admin import (
     admin_dashboard,
     admin_dashboard_post,
@@ -62,7 +67,12 @@ from app.services.auth import (
     password_reset_serializer,
     verify_password_reset_token,
 )
-from app.services.avatar import parse_avatar_size, process_avatar_upload, user_has_avatar, user_initials
+from app.services.avatar import (
+    parse_avatar_size,
+    process_avatar_upload,
+    user_has_avatar,
+    user_initials,
+)
 from app.services.email import build_reset_link, send_password_reset_email
 from app.services.users import (
     admin_count,
@@ -85,7 +95,14 @@ from app.services.users import (
     update_user_profile,
     update_user_role,
 )
-from app.web import redirect_to, render, route_url, template_url_context, template_url_for, templates
+from app.web import (
+    redirect_to,
+    render,
+    route_url,
+    template_url_context,
+    template_url_for,
+    templates,
+)
 from app.workouts.analytics import (
     add_workout_detail_buckets,
     build_last_30_day_workouts,
@@ -108,7 +125,12 @@ from app.workouts.analytics import (
     workout_detail_bucket_granularity,
     workout_detail_period_bounds,
 )
-from app.workouts.charts import build_chart, build_metric_bar_chart, build_workout_detail_charts, metric_axis_title
+from app.workouts.charts import (
+    build_chart,
+    build_metric_bar_chart,
+    build_workout_detail_charts,
+    metric_axis_title,
+)
 from app.workouts.io import (
     extract_json_objects,
     load_history_file,
