@@ -4,7 +4,7 @@ annotated-doc==0.0.5
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anyio==4.14.2
+anyio==4.15.1
     # via
     #   httpx
     #   starlette
@@ -41,9 +41,9 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   werkzeug
-narwhals==2.25.0
+narwhals==2.26.0
     # via plotly
-numpy==2.5.2
+numpy==2.5.3
     # via pandas
 packaging==26.3
     # via plotly
@@ -57,7 +57,7 @@ prometheus-client==0.26.0
     # via schwinn-dashboard
 pydantic==2.13.5
     # via fastapi
-pydantic-core==2.48.0
+pydantic-core==2.49.0
     # via pydantic
 python-dateutil==2.9.0.post0
     # via pandas
