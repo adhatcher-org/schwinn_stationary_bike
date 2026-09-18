@@ -81,7 +81,7 @@ typing-inspection==0.4.4
     # via
     #   fastapi
     #   pydantic
-tzdata==2026.3 ; sys_platform == 'emscripten' or sys_platform == 'win32'
+tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'
     # via pandas
 uvicorn==0.52.4
     # via schwinn-dashboard
