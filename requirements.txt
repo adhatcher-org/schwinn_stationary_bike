@@ -29,7 +29,7 @@ httptools==0.8.0
     # via uvicorn
 httpx==0.28.1
     # via schwinn-dashboard
-idna==3.19
+idna==3.20
     # via
     #   anyio
     #   httpx
@@ -47,11 +47,11 @@ numpy==2.5.3
     # via pandas
 packaging==26.3
     # via plotly
-pandas==3.0.5
+pandas==3.0.6
     # via schwinn-dashboard
 pillow==12.3.0
     # via schwinn-dashboard
-plotly==7.0.0
+plotly==7.1.0
     # via schwinn-dashboard
 prometheus-client==0.26.0
     # via schwinn-dashboard
