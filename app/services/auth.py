@@ -60,7 +60,7 @@ def verify_password_reset_token(
             salt=config.PASSWORD_RESET_SALT,
             max_age=max_age or config.PASSWORD_RESET_MAX_AGE_SECONDS,
         )
-    except BadSignature, SignatureExpired, Exception:
+    except (BadSignature, SignatureExpired, Exception) as exc:
         return None
     return get_user_by_email(str(email))
 
