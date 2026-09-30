@@ -2,7 +2,8 @@ SHELL := /bin/bash
 
 UV ?= uv
 UV_CACHE_DIR ?= /tmp/schwinn-uv-cache
-UV_RUN = UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV) run --no-sync
+UV_PROJECT = env -u VIRTUAL_ENV $(UV)
+UV_RUN = UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV_PROJECT) run --no-sync
 RUFF_RUN = RUFF_CACHE_DIR=/tmp/schwinn-ruff-cache $(UV_RUN) ruff
 PYTEST_RUN = $(UV_RUN) pytest -p no:cacheprovider
 IMAGE ?= schwinn:latest
@@ -16,10 +17,10 @@ DOCKER_TEST_NAME ?= schwinn-ui-test
 .PHONY: check format lint test coverage security deps-check requirements-check npm-lock-check install lock run build docker-build docker-run docker-ui-test local-test precommit clean
 
 install:
-	$(UV) sync
+	$(UV_PROJECT) sync
 
 lock:
-	UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV) lock
+	UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV_PROJECT) lock
 
 check: format lint test coverage security deps-check
 
@@ -43,7 +44,7 @@ deps-check: requirements-check npm-lock-check
 
 requirements-check:
 	@set -euo pipefail; \
-	diff -u <(grep -v '^#' requirements.txt) <(UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV) export --frozen --no-dev --format requirements-txt --no-hashes | grep -v '^#')
+	diff -u <(grep -v '^#' requirements.txt) <(UV_CACHE_DIR="$(UV_CACHE_DIR)" $(UV_PROJECT) export --frozen --no-dev --format requirements-txt --no-hashes | grep -v '^#')
 
 npm-lock-check:
 	npm ci --ignore-scripts --dry-run
@@ -57,7 +58,7 @@ git-hooks:
 precommit: local-test
 
 run:
-	$(UV) run uvicorn app.app:app --host 0.0.0.0 --port $(PORT)
+	$(UV_PROJECT) run uvicorn app.app:app --host 0.0.0.0 --port $(PORT)
 
 build: docker-build
 
