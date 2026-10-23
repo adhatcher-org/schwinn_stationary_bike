@@ -57,7 +57,7 @@ jobs:
             echo "has_token=false" >> "$GITHUB_OUTPUT"
             printf '{"alerts":[],"count":0}\n' > alerts.json
             echo "DEPENDABOT_ALERTS_TOKEN is not set; skipping Dependabot alert discovery." >> "$GITHUB_STEP_SUMMARY"
-            echo "Create a fine-grained token with Dependabot alerts read permission and save it as DEPENDABOT_ALERTS_TOKEN to enable remediation." >> "$GITHUB_STEP_SUMMARY"
+            echo "Create a fine-grained personal access token with the **Dependabot alerts: read** repository permission (or a classic token with the **security-events: read** scope) and save it as the DEPENDABOT_ALERTS_TOKEN secret to enable remediation." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Precheck Dependabot alerts API access
@@ -83,7 +83,9 @@ jobs:
           echo "Dependabot alerts API access check failed (HTTP $HTTP_CODE)." | tee -a "$GITHUB_STEP_SUMMARY"
           cat "$RESPONSE_FILE" | tee -a "$GITHUB_STEP_SUMMARY"
           rm -f "$RESPONSE_FILE"
-          echo "Use a token with Dependabot alerts read permission via DEPENDABOT_ALERTS_TOKEN." >> "$GITHUB_STEP_SUMMARY"
+          echo "The DEPENDABOT_ALERTS_TOKEN secret lacks permission to read Dependabot alerts." >> "$GITHUB_STEP_SUMMARY"
+          echo "Create a fine-grained personal access token with the **Dependabot alerts: read** repository permission (or a classic token with **security-events: read**) and save it as the DEPENDABOT_ALERTS_TOKEN secret." >> "$GITHUB_STEP_SUMMARY"
+          echo "Note: workflow-level permissions apply to GITHUB_TOKEN only, not to DEPENDABOT_ALERTS_TOKEN." >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
       - name: Discover candidate alerts
@@ -108,7 +110,7 @@ jobs:
         run: |
           COUNT=$(jq -r '.count' alerts.json)
           if [ "$COUNT" = "0" ]; then
-            echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
+            echo "matrix={"include":[]}" >> "$GITHUB_OUTPUT"
             echo "has_alerts=false" >> "$GITHUB_OUTPUT"
             echo "No matching open Dependabot alerts found." >> "$GITHUB_STEP_SUMMARY"
             exit 0
@@ -191,7 +193,7 @@ jobs:
           echo "title=$(jq -r '.title // ""' remediation.json)" >> "$GITHUB_OUTPUT"
           echo "alert_id=$(jq -r '.alert.alert_id // ""' remediation.json)" >> "$GITHUB_OUTPUT"
           echo "package=$(jq -r '.alert.package // ""' remediation.json)" >> "$GITHUB_OUTPUT"
-          echo "update_type=$(jq -r '.update_type // \"unknown\"' remediation.json)" >> "$GITHUB_OUTPUT"
+          echo "update_type=$(jq -r '.update_type // "unknown"' remediation.json)" >> "$GITHUB_OUTPUT"
           echo "auto_merge_eligible=$(jq -r '.auto_merge_eligible // false' remediation.json)" >> "$GITHUB_OUTPUT"
           jq -r '.pr_body // ""' remediation.json > pr_body.md
           jq -r '.labels // [] | join(",")' remediation.json > labels.txt
