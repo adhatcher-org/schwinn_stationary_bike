@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Join Types Tutorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .tables-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .table-wrapper {
+            flex: 1;
+            min-width: 300px;
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .table-title {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr.highlight {
+            background-color: #ffeb3b !important;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .join-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0b7dda;
+        }
+        button.active {
+            background-color: #ff9800;
+        }
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .explanation h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .switch-option {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+            border-left: 4px solid #ff9800;
+        }
+        .highlighted {
+            background-color: #ffeb3b !important;
+        }
+        .join-key-note, .sql-example {
+            text-align: center;
+            margin: 10px auto;
+        }
+        .sql-example code {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #f2f2f2;
+            border-radius: 4px;
+            overflow-wrap: anywhere;
+        }
+        .join-explanation {
+            max-width: 900px;
+            margin: 16px auto;
+            padding: 14px 18px;
+            background: #f4f8e8;
+            border-left: 4px solid #78a22f;
+            border-radius: 4px;
+            text-align: left;
+        }
+        .switch-option {
+            margin: 16px auto;
+            max-width: 900px;
+            padding: 14px;
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            border-radius: 5px;
+        }
+        .switch-option p { margin: 6px 0 12px; }
+        button:disabled { cursor: not-allowed; opacity: .55; }
+        @media (max-width: 700px) {
+            .table-wrapper { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SQL Join Types Tutorial</h1>
+        
+        <div class="tables-container">
+            <div class="table-wrapper">
+                <div class="table-title">Table A</div>
+                <table id="tableA">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Alice</td>
+                            <td>HR</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Bob</td>
+                            <td>IT</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Charlie</td>
+                            <td>Finance</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>David</td>
+                            <td>IT</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Eve</td>
+                            <td>HR</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Frank</td>
+                            <td>Marketing</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>Grace</td>
+                            <td>Sales</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>Henry</td>
+                            <td>Finance</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>Irene</td>
+                            <td>Marketing</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>Jack</td>
+                            <td>Sales</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-wrapper">
+                <div class="table-title">Table B</div>
+                <table id="tableB">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Project</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Alice</td>
+                            <td>Project A</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Bob</td>
+                            <td>Project B</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Charlie</td>
+                            <td>Project C</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>David</td>
+                            <td>Project D</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Eve</td>
+                            <td>Project E</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Kevin</td>
+                            <td>Project F</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>Laura</td>
+                            <td>Project G</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>Michael</td>
+                            <td>Project H</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>Nancy</td>
+                            <td>Project I</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>Olivia</td>
+                            <td>Project J</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-wrapper">
+                <div class="table-title">Results</div>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>A.ID</th>
+                            <th>A.Name</th>
+                            <th>A.Department</th>
+                            <th>B.ID</th>
+                            <th>B.Name</th>
+                            <th>B.Project</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <p class="join-key-note">The examples join on <code>Name</code>: Alice through Eve match; the other five names in each table are unique.</p>
+        <p class="sql-example"><code id="sqlStatement">SELECT * FROM TableA A INNER JOIN TableB B ON A.Name = B.Name;</code></p>
+        <div class="join-explanation" id="joinExplanation" aria-live="polite">Choose a join type to see why its highlighted rows are included.</div>
+        
+        <div class="controls">
+            <div class="join-buttons">
+                <button onclick="executeJoin('inner', this)">INNER JOIN</button>
+                <button onclick="executeJoin('left', this)">LEFT JOIN</button>
+                <button onclick="executeJoin('right', this)">RIGHT JOIN</button>
+                <button onclick="executeJoin('outer', this)">FULL OUTER JOIN</button>
+            </div>
+            
+            <div class="switch-option">
+                <p><strong>Equivalent query:</strong> Swap the table order and change LEFT to RIGHT (or RIGHT to LEFT). The output is kept in Table A / Table B column order so you can compare the same result.</p>
+                <button id="swapTablesButton" type="button" onclick="toggleTableOrder()" disabled>Swap table order in query</button>
+                <span id="swapStatus" aria-live="polite">Choose LEFT JOIN or RIGHT JOIN to enable the equivalent-query switch.</span>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h3>Join Types Explanation</h3>
+            <ul>
+                <li><strong>INNER JOIN:</strong> Returns only rows that exist in both tables based on the join condition.</li>
+                <li><strong>LEFT JOIN:</strong> Returns all rows from the left table and matching rows from the right table.</li>
+                <li><strong>RIGHT JOIN:</strong> Returns all rows from the right table and matching rows from the left table.</li>
+                <li><strong>FULL OUTER JOIN:</strong> Returns all rows from both tables, with matching rows combined.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let selectedJoin = 'inner';
+        let tablesSwapped = false;
+
+        function getTableRows(tableId) {
+            return Array.from(document.querySelectorAll(`#${tableId} tbody tr`)).map(row => ({
+                id: row.cells[0].textContent.trim(),
+                name: row.cells[1].textContent.trim(),
+                detail: row.cells[2].textContent.trim(),
+                element: row
+            }));
+        }
+
+        function executeJoin(joinType, button) {
+            selectedJoin = joinType;
+            if (button) {
+                document.querySelectorAll('.join-buttons button').forEach(item => item.classList.remove('active'));
+                button.classList.add('active');
+            }
+
+            const rowsA = getTableRows('tableA');
+            const rowsB = getTableRows('tableB');
+            const matchedA = new Set();
+            const matchedB = new Set();
+            const results = [];
+
+            document.querySelectorAll('#tableA tbody tr, #tableB tbody tr')
+                .forEach(row => row.classList.remove('highlight'));
+
+            // This tutorial joins on Name: Alice–Eve match, while the other names are unique.
+            rowsA.forEach(rowA => {
+                rowsB.forEach(rowB => {
+                    if (rowA.name === rowB.name) {
+                        matchedA.add(rowA);
+                        matchedB.add(rowB);
+                        results.push({ rowA, rowB });
+                    }
+                });
+            });
+
+            if (joinType === 'left' || joinType === 'outer') {
+                rowsA.forEach(rowA => {
+                    if (!matchedA.has(rowA)) results.push({ rowA, rowB: null });
+                });
+            }
+            if (joinType === 'right' || joinType === 'outer') {
+                rowsB.forEach(rowB => {
+                    if (!matchedB.has(rowB)) results.push({ rowA: null, rowB });
+                });
+            }
+
+            // A LEFT includes every A row; B RIGHT includes every B row. Other rows
+            // are highlighted only when they have a matching row on the opposite side.
+            rowsA.forEach(rowA => {
+                if (joinType === 'left' || joinType === 'outer' || matchedA.has(rowA)) {
+                    rowA.element.classList.add('highlight');
+                }
+            });
+            rowsB.forEach(rowB => {
+                if (joinType === 'right' || joinType === 'outer' || matchedB.has(rowB)) {
+                    rowB.element.classList.add('highlight');
+                }
+            });
+
+            populateResultsTable(results);
+            updateJoinDetails(joinType, rowsA, rowsB, matchedA, matchedB);
+        }
+
+        function updateJoinDetails(joinType, rowsA, rowsB, matchedA, matchedB) {
+            const displayedType = tablesSwapped
+                ? ({ left: 'RIGHT', right: 'LEFT', inner: 'INNER', outer: 'FULL OUTER' })[joinType]
+                : ({ left: 'LEFT', right: 'RIGHT', inner: 'INNER', outer: 'FULL OUTER' })[joinType];
+            const fromClause = tablesSwapped
+                ? `TableB B ${displayedType} JOIN TableA A`
+                : `TableA A ${displayedType} JOIN TableB B`;
+            document.getElementById('sqlStatement').textContent =
+                `SELECT * FROM ${fromClause} ON A.Name = B.Name;`;
+
+            const unmatchedA = rowsA.filter(row => !matchedA.has(row)).map(row => row.name);
+            const unmatchedB = rowsB.filter(row => !matchedB.has(row)).map(row => row.name);
+            const explanation = {
+                inner: `Only rows with a matching Name in both tables are included and highlighted: Alice, Bob, Charlie, David, and Eve. Unmatched Table A rows (${unmatchedA.join(', ')}) and Table B rows (${unmatchedB.join(', ')}) are not highlighted or returned. Result: ${matchedA.size} rows.`,
+                left: `Every Table A row is included and highlighted. Table B rows are highlighted only when their Name matches a Table A row. The five shared names produce joined rows; Table A's unmatched names (${unmatchedA.join(', ')}) appear with blank Table B columns. Table B's unmatched names (${unmatchedB.join(', ')}) are omitted. Result: ${rowsA.length} rows.`,
+                right: `Every Table B row is included and highlighted. Table A rows are highlighted only when their Name matches a Table B row. The five shared names produce joined rows; Table B's unmatched names (${unmatchedB.join(', ')}) appear with blank Table A columns. Table A's unmatched names (${unmatchedA.join(', ')}) are omitted. Result: ${rowsB.length} rows.`,
+                outer: `All rows from both tables are included and highlighted. Shared names are combined into one result row; Table A-only names (${unmatchedA.join(', ')}) have blank Table B columns, and Table B-only names (${unmatchedB.join(', ')}) have blank Table A columns. Result: ${matchedA.size + unmatchedA.length + unmatchedB.length} rows.`
+            }[joinType];
+            document.getElementById('joinExplanation').textContent = explanation;
+
+            const switchButton = document.getElementById('swapTablesButton');
+            const switchStatus = document.getElementById('swapStatus');
+            const canSwitch = joinType === 'left' || joinType === 'right';
+            switchButton.disabled = !canSwitch;
+            switchButton.textContent = tablesSwapped ? 'Restore Table A then Table B' : 'Swap table order in query';
+            switchStatus.textContent = canSwitch
+                ? (tablesSwapped
+                    ? 'Swapped: the equivalent query is shown. The results remain in A/B column order.'
+                    : 'Available for LEFT and RIGHT joins; switching order should preserve the result rows.')
+                : 'Choose LEFT JOIN or RIGHT JOIN to enable the equivalent-query switch.';
+        }
+
+        function toggleTableOrder() {
+            if (selectedJoin !== 'left' && selectedJoin !== 'right') return;
+            tablesSwapped = !tablesSwapped;
+
+            // Reorder the visible source-table panels while retaining their A/B identities.
+            document.querySelector('#tableA').closest('.table-wrapper').style.order = tablesSwapped ? '2' : '1';
+            document.querySelector('#tableB').closest('.table-wrapper').style.order = tablesSwapped ? '1' : '2';
+            document.querySelector('#resultsTable').closest('.table-wrapper').style.order = '3';
+
+            // Re-run the same logical join; only its equivalent SQL/table order changes.
+            executeJoin(selectedJoin, null);
+        }
+
+        function populateResultsTable(results) {
+            const body = document.getElementById('resultsBody');
+            body.innerHTML = '';
+
+            results.forEach(({ rowA, rowB }) => {
+                const outputRow = document.createElement('tr');
+                [
+                    rowA ? rowA.id : '',
+                    rowA ? rowA.name : '',
+                    rowA ? rowA.detail : '',
+                    rowB ? rowB.id : '',
+                    rowB ? rowB.name : '',
+                    rowB ? rowB.detail : ''
+                ].forEach(value => {
+                    outputRow.insertCell().textContent = value;
+                });
+                body.appendChild(outputRow);
+            });
+        }
+
+        // Keep the Results table blank until the user chooses a join type.
+    </script>
+</body>
+</html>
